@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Dados</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+            crossorigin="anonymous"></script>
+</head>
+<body>
+<div class="container my-5">
+    <div class="row">
+        <div class="col">
+            <h1 class="mt-5">Últimos Jogos</h1>
+        </div>
+        <div class="col text-end">
+            <button type="button" class="btn btn-primary mt-5" data-bs-toggle="modal" data-bs-target="#jogarModal">
+                Jogar
+            </button>
+        </div>
+    </div>
+    <table class="table table-striped mt-3">
+        <thead>
+        <tr>
+            <th>Nº</th>
+            <th>Valor dos dados</th>
+            <th>Quantidade de jogadores</th>
+            <th>Resultado</th>
+            <th></th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="jogo : ${jogos}">
+            <td th:text="${jogo.id}"></td>
+            <td th:text="${jogo.valorDados}"></td>
+            <td th:text="${jogo.quantidadeJogadores}"></td>
+            <td th:text="${jogo.resultado.getDescricao()}"></td>
+            <td>
+                <form th:action="@{/jogo/{id}(id=${jogo.id})}" method="get">
+                    <button type="submit" class="btn btn-secondary">
+                        <i class="bi bi-eye"></i>
+                    </button>
+                </form>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+
+<div class="modal fade" id="jogarModal" tabindex="-1" aria-labelledby="jogarModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="jogarModalLabel">Jogar Dados</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="jogarForm" action="/jogar" method="post">
+                    <div class="mb-3">
+                        <label for="nomeJogador" class="form-label">Nome do Jogador</label>
+                        <input type="text" class="form-control" id="nomeJogador" name="nomeJogador">
+                        <div class="invalid-feedback">Nome do jogador já existe!</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="apostaJogador" class="form-label">Aposta do Jogador</label>
+                        <input type="number" class="form-control" id="apostaJogador" name="apostaJogador" min="2"
+                               max="12">
+                        <div class="invalid-feedback">Valor da aposta já existe ou é inválido!</div>
+                    </div>
+                    <button type="button" class="btn btn-secondary mb-3" id="adicionarJogador">Adicionar Jogador
+                    </button>
+                    <ul id="listaJogadores" class="list-group mb-3"></ul>
+                    <div class="invalid-feedback d-block" id="erroQuantidadeJogadores" style="display: none;">O número
+                        de
+                        jogadores deve ser no mínimo 2!
+                    </div>
+                    <button type="submit" class="btn btn-primary" id="botaoJogar" disabled>Jogar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function atualizarEstadoBotaoJogar() {
+        const listaJogadores = document.getElementById('listaJogadores');
+        const botaoJogar = document.getElementById('botaoJogar');
+        const erroQuantidadeJogadores = document.getElementById('erroQuantidadeJogadores');
+        const botaoAdicionarJogador = document.getElementById('adicionarJogador');
+        const inputNomeJogador = document.getElementById('nomeJogador');
+        const inputApostaJogador = document.getElementById('apostaJogador');
+        const quantidadeJogadores = listaJogadores.querySelectorAll('li').length;
+
+        if (quantidadeJogadores >= 2) {
+            botaoJogar.disabled = false;
+            erroQuantidadeJogadores.style.display = 'none';
+        } else {
+            botaoJogar.disabled = true;
+            erroQuantidadeJogadores.style.display = 'block';
+        }
+
+        if (quantidadeJogadores >= 11) {
+            botaoAdicionarJogador.disabled = true;
+            inputNomeJogador.disabled = true;
+            inputApostaJogador.disabled = true;
+        } else {
+            botaoAdicionarJogador.disabled = false;
+            inputNomeJogador.disabled = false;
+            inputApostaJogador.disabled = false;
+        }
+    }
+
+    document.getElementById('adicionarJogador').addEventListener('click', function () {
+        const nomeJogador = document.getElementById('nomeJogador').value.trim();
+        const apostaJogador = document.getElementById('apostaJogador').value.trim();
+        const listaJogadores = document.getElementById('listaJogadores');
+        let nomeDuplicado = false;
+        let apostaDuplicada = false;
+        let apostaInvalida = false;
+
+        listaJogadores.querySelectorAll('li').forEach(function (item) {
+            const [nome, apostaTexto] = item.textContent.split(' - Aposta: ');
+            const aposta = parseFloat(apostaTexto);
+            if (nome.trim() === nomeJogador) {
+                nomeDuplicado = true;
+            }
+            if (aposta === parseFloat(apostaJogador)) {
+                apostaDuplicada = true;
+            }
+        });
+
+        if (apostaJogador < 2 || apostaJogador > 12) {
+            apostaInvalida = true;
+        }
+
+        if (nomeDuplicado) {
+            document.getElementById('nomeJogador').classList.add('is-invalid');
+        } else {
+            document.getElementById('nomeJogador').classList.remove('is-invalid');
+        }
+
+        if (apostaDuplicada || apostaInvalida) {
+            document.getElementById('apostaJogador').classList.add('is-invalid');
+        } else {
+            document.getElementById('apostaJogador').classList.remove('is-invalid');
+        }
+
+        if (!nomeDuplicado && !apostaDuplicada && !apostaInvalida && nomeJogador && apostaJogador) {
+            const itemLista = document.createElement('li');
+            itemLista.className = 'list-group-item d-flex justify-content-between align-items-center';
+            itemLista.innerHTML = `${nomeJogador} - Aposta: ${apostaJogador} <button type="button" class="btn btn-danger btn-sm remover-jogador">Remover</button>`;
+            listaJogadores.appendChild(itemLista);
+
+            itemLista.querySelector('.remover-jogador').addEventListener('click', function () {
+                listaJogadores.removeChild(itemLista);
+                atualizarEstadoBotaoJogar();
+            });
+
+            document.getElementById('nomeJogador').value = '';
+            document.getElementById('apostaJogador').value = '';
+            atualizarEstadoBotaoJogar();
+        }
+    });
+
+    async function lancarDado() {
+        const response = await fetch('/lancar-dado');
+        const result = await response.text();
+        return parseInt(result, 10);
+    }
+
+    document.getElementById('jogarForm').addEventListener('submit', async function (event) {
+        event.preventDefault();
+
+        const jogadores = [];
+        document.getElementById('listaJogadores').querySelectorAll('li').forEach(function (item) {
+            const [nome, apostaTexto] = item.textContent.split(' - Aposta: ');
+            const aposta = parseFloat(apostaTexto);
+            jogadores.push({nome: nome.trim(), aposta: aposta});
+        });
+
+        if (jogadores.length < 2) {
+            document.getElementById('erroQuantidadeJogadores').style.display = 'block';
+            return;
+        } else {
+            document.getElementById('erroQuantidadeJogadores').style.display = 'none';
+        }
+
+        const dado1 = await lancarDado();
+        const dado2 = await lancarDado();
+        const valorDados = dado1 + dado2;
+
+        const jogo = {
+            jogadores: jogadores,
+            quantidadeJogadores: jogadores.length,
+            valorDados: valorDados
+        };
+
+        alert(`Dado 1: ${dado1}\nDado 2: ${dado2}\nSoma dos dados: ${valorDados}`);
+
+        fetch('/jogar', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(jogo)
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.erro) {
+                    alert(data.erro);
+                } else {
+                    alert('Dados jogados!');
+                    window.location.href = '/';
+                    location.reload();
+                }
+            })
+            .catch(error => console.error('Error:', error.toString()));
+
+
+        var modal = bootstrap.Modal.getInstance(document.getElementById('jogarModal'));
+        modal.hide();
+    });
+
+    document.getElementById('jogarModal').addEventListener('hidden.bs.modal', function () {
+        document.getElementById('listaJogadores').innerHTML = '';
+        document.getElementById('nomeJogador').value = '';
+        document.getElementById('apostaJogador').value = '';
+        atualizarEstadoBotaoJogar();
+    });
+
+    atualizarEstadoBotaoJogar();
+</script>
+</body>
+</html>

@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Dados</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+            crossorigin="anonymous"></script>
+</head>
+<body>
+<div class="container my-5">
+    <div class="row">
+        <div class="col">
+            <h1 class="mt-5">Jogo número <span th:text="${jogo.id}"></span></h1>
+        </div>
+        <div class="col text-end">
+            <a href="/" class="btn btn-secondary mt-5">Voltar</a>
+        </div>
+    </div>
+    <table class="table table-striped mt-3">
+        <thead>
+        <tr>
+            <th>Número do Jogo</th>
+            <th>Valor dos Dados</th>
+            <th>Quantidade de Jogadores</th>
+            <th>Resultado</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <td th:text="${jogo.id}"></td>
+            <td th:text="${jogo.valorDados}"></td>
+            <td th:text="${jogo.quantidadeJogadores}"></td>
+            <td th:text="${jogo.resultado.getDescricao()}"></td>
+        </tr>
+        </tbody>
+    </table>
+    <h2 class="mt-5">Jogadores</h2>
+    <table class="table table-striped mt-3">
+        <thead>
+        <tr>
+            <th>Nome do Jogador</th>
+            <th>Aposta</th>
+            <th>Venceu</th>
+            <th>Valor do Dado</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="jogador : ${jogo.jogadores}">
+            <td th:text="${jogador.nome}"></td>
+            <td th:text="${jogador.aposta}"></td>
+            <td th:text="${jogador.vencedor ? 'Sim' : 'Não'}"></td>
+            <td th:text="${jogo.valorDados}"></td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+</body>
+</html>
